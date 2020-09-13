@@ -1,11 +1,10 @@
 import sys
 import time
 import math
-
+import utils
 import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-import utils
 from coco_eval import CocoEvaluator
 from coco_utils import get_coco_api_from_dataset
 
