@@ -1,7 +1,0 @@
-name: snow-grooming-object-detection
-dependencies:
-  - python=3.8
-  - pip:
-    - opencv-python
-    - openimages
-    - streamlit
