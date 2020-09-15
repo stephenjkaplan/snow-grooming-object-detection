@@ -2,6 +2,10 @@ import sys
 import time
 import math
 import utils
+import numpy as np
+from matplotlib import style
+import matplotlib.pyplot as plt
+style.use('fivethirtyeight')
 import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
@@ -27,7 +31,7 @@ def get_object_detection_model(num_classes, trainable_backbone_layers=3):
     return model
 
 
-##### ADAPTED FROM https://github.com/pytorch/vision/blob/master/references/detection/engine.py #####
+# ADAPTED FROM https://github.com/pytorch/vision/blob/master/references/detection/engine.py #####
 def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -149,3 +153,62 @@ def evaluate(model, data_loader, device):
     coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
     return coco_evaluator
+
+
+def train_model(obj_class_labels, trainable_layers, device, learning_rate, momentum, weight_decay, step_size, gamma,
+                num_epochs, data_loader_train, data_loader_val, score_val=False):
+    # Load Faster R-CNN Model pretrained on COCO and replace its classifier with a new one that has `num_classes`.
+    # add extra class for background
+    model = get_object_detection_model(len(obj_class_labels) + 1, trainable_backbone_layers=trainable_layers)
+
+    # move model to the right device
+    model.to(device)
+
+    # create optimizer that will only train final layers
+    optimizer = torch.optim.SGD(
+        params=[p for p in model.parameters() if p.requires_grad],
+        lr=learning_rate,
+        momentum=momentum,
+        weight_decay=weight_decay
+    )
+
+    # and a learning rate scheduler
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+
+    training_losses = []
+    validation_losses = []
+    for epoch in range(num_epochs):
+        # train for one epoch, printing every 10 iterations
+        metric_log, loss_tracker = train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=100)
+        training_losses.append(np.mean(loss_tracker))
+
+        # save losses for plotting later
+        if score_val:
+            validation_loss = get_validation_loss(model, data_loader_val, device)
+            validation_losses.append(np.mean(validation_loss))
+
+        # update the learning rate
+        lr_scheduler.step()
+
+        # evaluate on the test dataset
+        evaluate(model, data_loader_val, device=device)
+
+        # early stopping condition
+        if score_val and epoch > 0:
+            if validation_losses[-1] > (validation_losses[-2] + 0.01):
+                print('Training Stopped. Early stopping criteria met.')
+                break
+
+    plt.plot(training_losses)
+    if score_val:
+        # plot loss curve
+        plt.plot(validation_losses)
+        plt.legend(['Training Loss', 'Validation Loss'])
+    else:
+        plt.legend(['Training Loss'])
+
+    plt.title(f'Loss Curve (Learning Rate = {learning_rate})')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+
+    return model

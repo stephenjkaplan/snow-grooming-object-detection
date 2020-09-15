@@ -7,33 +7,48 @@ import torchvision.transforms as T
 
 
 class GoogleOpenImageDataset(torch.utils.data.Dataset):
+    """
+    Inherits from the PyTorch Dataset class to work specifically for Google Open Images data format.
+    Prepares dataset for training or validation.
+    """
     def __init__(self, root, obj_class_labels, max_images_per_class, train=False):
+        """
+        Initializes class.
+
+        :param str root: Root path of directory containing all files, code, etc.
+        :param list obj_class_labels: Object labels to detect in dataset.
+        :param int max_images_per_class: Maximum number of images with annotations to use in training.
+        :param bool train: If True, will perform data augmentation on images for training.
+        """
         self.root = root
         self.obj_class_labels = obj_class_labels
         self.train = train
 
-        # load images and annotation
         imgs = []
         xml_files = []
+        # iterate through object classes, loading data from folders, and create list of image and xml file names
         for obj_class in obj_class_labels:
+            obj_class = obj_class.lower()
+
             class_imgs = os.listdir(os.path.join(root, 'classes', obj_class, 'images'))
-            class_img_filepaths = [
-                os.path.join(root, f'classes/{obj_class}/images/{i}') for i in class_imgs
-            ]
+            class_img_filepaths = [os.path.join(root, f'classes/{obj_class}/images/{i}') for i in class_imgs]
+            imgs.extend(class_img_filepaths[:max_images_per_class])
 
             class_xml_files = os.listdir(os.path.join(root, 'classes', obj_class, 'xml_files'))
-            class_xml_filepaths = [
-                os.path.join(root, f'classes/{obj_class}/xml_files/{i}') for i in class_xml_files
-            ]
-
-            imgs.extend(class_img_filepaths[:max_images_per_class])
+            class_xml_filepaths = [os.path.join(root, f'classes/{obj_class}/xml_files/{i}') for i in class_xml_files]
             xml_files.extend(class_xml_filepaths[:max_images_per_class])
 
+        # sort before assignment so that corresponding images and xml files have the same indices in each list
         self.imgs = list(sorted(imgs))
         self.xml_files = list(sorted(xml_files))
 
     @staticmethod
     def parse_xml(filename):
+        """
+
+        :param filename: 
+        :return:
+        """
         xml_contents = open(filename).read()
         soup = BeautifulSoup(xml_contents, 'lxml')
 
