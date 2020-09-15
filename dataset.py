@@ -45,15 +45,19 @@ class GoogleOpenImageDataset(torch.utils.data.Dataset):
     @staticmethod
     def parse_xml(filename):
         """
+        Parses .xml file, extracting all ground truth boundary box coordinates with corresponding labels.
 
-        :param filename: 
-        :return:
+        :param str filename: .xml file
+        :return: Tuple containing a list of each set of boundary box coordinates and a list of corresponding labels.
+        :rtype: tuple
         """
+        # read file and convert to parse-able format
         xml_contents = open(filename).read()
         soup = BeautifulSoup(xml_contents, 'lxml')
 
         boxes = []
         labels = []
+        # get each boundary box specified in file
         for obj in soup.find_all('object'):
             xmin = int(obj.xmin.text)
             xmax = int(obj.xmax.text)
@@ -91,10 +95,18 @@ class GoogleOpenImageDataset(torch.utils.data.Dataset):
         return new_image, new_boxes
 
     def __getitem__(self, idx):
+        """
+        Runs when using indexing behavior ([]) on this class.
+
+        :param int idx: Index of image/xml file pair to get.
+        :return: Tuple containing image and target (basically metadata for images needed for training the model).
+        :rtype: tuple
+        """
         # load images and annotations
         img_path = self.imgs[idx]
         xml_path = self.xml_files[idx]
 
+        # open image and parse xml file
         img = Image.open(img_path).convert("RGB")
         boxes, labels = self.parse_xml(xml_path)
 
@@ -105,9 +117,11 @@ class GoogleOpenImageDataset(torch.utils.data.Dataset):
         # transformations
         img_transform_list = [T.ToTensor()]
         if self.train:
+            # Flip image and boundary box with 50% chance
             if random.uniform(0, 1) > 0.5:
                 img, boxes = self.flip(img, boxes)
 
+        # perform transforms on image
         img_transforms = T.Compose(img_transform_list)
         img = img_transforms(img)
 
