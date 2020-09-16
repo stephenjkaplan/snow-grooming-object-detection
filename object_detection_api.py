@@ -69,8 +69,8 @@ def get_prediction(image_bytes, threshold=0.5):
     """
     Makes boundary box prediction on image data and puts results in a JSON-ish format.
 
-    :param bytes image_bytes: Bytes-type object containing image data. Using the native Python open() function will
-                              yield this data type.
+    :param bytes image_bytes: Bytes-type object containing image data. Using the native Python file = open() and
+                              then file.read() functions will yield this data type.
     :param float threshold: Score threshold of predictions. Only predicted boundary boxes with corresponding scores
                             above this value will be returned.
     :return: List of dictionaries, each containing a score, boundary box coordinates, and label in text form.

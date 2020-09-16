@@ -1,5 +1,19 @@
 import requests
 import json
+import unittest
+
+'''from object_detection_api import transform_image
+
+
+class TestApi(unittest.TestCase):
+    def test_transform_image(self):
+        f = open('test_image.jpeg')
+        image_bytes = f.read()
+        transformed_image = transform_image(image_bytes)
+
+        a = 1
+'''
+
 
 resp1 = requests.post(
     url="http://localhost:5000/predict",
@@ -14,3 +28,4 @@ resp2 = requests.post(
 
 results1 = json.loads(resp1.content)
 results2 = json.loads(resp2.content)
+

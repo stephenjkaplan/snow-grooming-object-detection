@@ -1,22 +1,28 @@
 import sys
 import time
 import math
-import utils
 import numpy as np
 from matplotlib import style
 import matplotlib.pyplot as plt
-style.use('fivethirtyeight')
+
 import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from coco_eval import CocoEvaluator
-from coco_utils import get_coco_api_from_dataset
+
+from torchvision_scripts import utils
+from torchvision_scripts.coco_eval import CocoEvaluator
+from torchvision_scripts.coco_utils import get_coco_api_from_dataset
 
 
 def get_object_detection_model(num_classes, trainable_backbone_layers=3):
     """
     Prepares pretrained Faster R-CNN model with a final layer for retraining.
 
+    :param int num_classes: Number of objects to be predicted in fine-tuned model.
+    :param int trainable_backbone_layers: Number of unfrozen layers in network. The weights of these layers can be
+                                          updated upon training.
+    :return: Faster R-CNN model with final layers unfrozen and ready to be trained on custom dataset.
+    :rtype: torchvision.models.detection.FastRCNNPredictor
     """
     # load an instance segmentation model pre-trained pre-trained on COCO
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True,
@@ -58,6 +64,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
         loss_dict_reduced = utils.reduce_dict(loss_dict)
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
 
+        # keep track of loss for each epoch
         loss_value = losses_reduced.item()
         loss_tracker.append(loss_value)  # added by Stephen Kaplan
 
@@ -93,7 +100,10 @@ def _get_iou_types(model):
 
 @torch.no_grad()
 def get_validation_loss(model, data_loader, device):
-    """Added by Stephen Kaplan"""
+    """Added by Stephen Kaplan
+
+    Calculates loss without training for validation data.
+    """
     loss_tracker = []
     for images, targets in data_loader:
         images = list(image.to(device) for image in images)
@@ -115,8 +125,10 @@ def get_validation_loss(model, data_loader, device):
 
 @torch.no_grad()
 def evaluate(model, data_loader, device):
+    """
+    Evaluates the performance of the object detection model (precision, recall, etc.).
+    """
     n_threads = torch.get_num_threads()
-    # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
     cpu_device = torch.device("cpu")
     model.eval()
@@ -157,6 +169,28 @@ def evaluate(model, data_loader, device):
 
 def train_model(obj_class_labels, trainable_layers, device, learning_rate, momentum, weight_decay, step_size, gamma,
                 num_epochs, data_loader_train, data_loader_val, score_val=False):
+    """
+    Main function for training Faster R-CNN. Logs performance and progress of training as it iterates through epochs.
+    Uses stochastic gradient descent (SGD) as the optimizer.
+
+    :param list obj_class_labels:
+    :param int trainable_layers: Number of unfrozen layers in network. The weights of these layers can be updated upon
+                                 training.
+    :param device: torch.device('cuda') or torch.device('cpu')
+    :param float learning_rate: Learning rate to be passed to the optimizer. Determines the size of the steps taken in
+                                gradient descent.
+    :param float momentum: Momentum factor to be passed to the optimizer. Determines the degree to which the training
+                           tries to maintain the previous direction of gradient descent (on a scale of 0 to 1).
+    :param float weight_decay: L2 penalty
+    :param int step_size: Period of learning weight decay. (Learning rate will be updated every [step_size] epochs).
+    :param float gamma: Multiplicative factor of learning rate decay.
+    :param int num_epochs: Number of epochs for model training.
+    :param torch.utils.data.DataLoader data_loader_train: Data loader for training data.
+    :param torch.utils.data.DataLoader data_loader_val: Data loader for validation data.
+    :param bool score_val: Determines if validation loss should be calculated.
+    :return: Faster R-CNN model, fine-tuned on custom dataset.
+    :rtype: torchvision.models.detection.FastRCNNPredictor
+    """
     # Load Faster R-CNN Model pretrained on COCO and replace its classifier with a new one that has `num_classes`.
     # add extra class for background
     model = get_object_detection_model(len(obj_class_labels) + 1, trainable_backbone_layers=trainable_layers)
@@ -199,6 +233,7 @@ def train_model(obj_class_labels, trainable_layers, device, learning_rate, momen
                 print('Training Stopped. Early stopping criteria met.')
                 break
 
+    style.use('fivethirtyeight')
     plt.plot(training_losses)
     if score_val:
         # plot loss curve
