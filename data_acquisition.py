@@ -20,7 +20,8 @@ def download_google_open_images(class_labels, limit_per_class=5000, dest_dir='da
     :param str dest_dir: Directory to download files into.
     """
     # download data
-    download_dataset(dest_dir=dest_dir, class_labels=class_labels, annotation_format='pascal', limit=limit_per_class)
+    class_labels_cap = [o.capitalize() for o in class_labels]
+    download_dataset(dest_dir=dest_dir, class_labels=class_labels_cap, annotation_format='pascal', limit=limit_per_class)
 
     # rename folders 'pascal' to 'xml_files' to be compatible with Snow_Grooming_Object Detection_with_PyTorch.ipynb
     for label in class_labels:
