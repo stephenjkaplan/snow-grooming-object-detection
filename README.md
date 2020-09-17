@@ -37,9 +37,39 @@ science program.
 * `torchvision_scripts/` contains files cloned from the [torchvision repository](https://github.com/pytorch/vision) that 
   aren't accessible via the normal install of torchvision.
 
-#### Using Prediction API
+#### Using Object Detection API
 
-TODO
+TI developed a prototype for an object detection API that can be run on localhost. You must first use the notebook 
+in this repository to train and save a model. No pre-built model is provided. Assuming you have 
+[Flask](https://flask.palletsprojects.com/en/1.1.x/) installed, first run the following command in your terminal:
+
+`$ FLASK_ENV=development FLASK_APP=object_detection_api.py flask run`
+
+Then, assuming you hae the [requests](https://requests.readthedocs.io/en/master/) library installed, make the following 
+HTTP request:
+
+```python
+import requests
+
+response = requests.post(
+    url="http://localhost:5000/predict",
+    files={"file": open('test_image.jpg', 'rb')}
+)
+```
+
+Replacing the image file name with the image of interest. If you'd like to tune the predicted probability threshold 
+for detection of an object class, you can pass it as a parameter:
+
+```python
+response = requests.post(
+    url="http://localhost:5000/predict",
+    params={'threshold': 0.25},
+    files={"file": open('test_image.jpg', 'rb')}
+)
+```
+
+You can also use the function `object_detection_api.get_prediction` directly (see the function for documentation.)
+
 
 #### Dependencies
 
