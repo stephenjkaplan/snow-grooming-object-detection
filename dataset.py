@@ -11,16 +11,16 @@ class GoogleOpenImageDataset(torch.utils.data.Dataset):
     Inherits from the PyTorch Dataset class to work specifically for Google Open Images data format.
     Prepares dataset for training or validation.
     """
-    def __init__(self, root, obj_class_labels, max_images_per_class, train=False):
+    def __init__(self, obj_class_labels, max_images_per_class, folder_name='data', train=False):
         """
         Initializes class.
 
-        :param str root: Root path of directory containing all files, code, etc.
         :param list obj_class_labels: Object labels to detect in dataset.
+        :param str folder_name: Directory containing all image/xml files. Defaults to 'data'.
         :param int max_images_per_class: Maximum number of images with annotations to use in training.
         :param bool train: If True, will perform data augmentation on images for training.
         """
-        self.root = root
+        self.folder_name = folder_name
         self.obj_class_labels = obj_class_labels
         self.train = train
 
@@ -30,12 +30,12 @@ class GoogleOpenImageDataset(torch.utils.data.Dataset):
         for obj_class in obj_class_labels:
             obj_class = obj_class.lower()
 
-            class_imgs = os.listdir(os.path.join(root, 'classes', obj_class, 'images'))
-            class_img_filepaths = [os.path.join(root, f'classes/{obj_class}/images/{i}') for i in class_imgs]
+            class_imgs = os.listdir(os.path.join(folder_name, obj_class, 'images'))
+            class_img_filepaths = [os.path.join(folder_name, f'{obj_class}/images/{i}') for i in class_imgs]
             imgs.extend(class_img_filepaths[:max_images_per_class])
 
-            class_xml_files = os.listdir(os.path.join(root, 'classes', obj_class, 'xml_files'))
-            class_xml_filepaths = [os.path.join(root, f'classes/{obj_class}/xml_files/{i}') for i in class_xml_files]
+            class_xml_files = os.listdir(os.path.join(folder_name, obj_class, 'xml_files'))
+            class_xml_filepaths = [os.path.join(folder_name, f'{obj_class}/xml_files/{i}') for i in class_xml_files]
             xml_files.extend(class_xml_filepaths[:max_images_per_class])
 
         # sort before assignment so that corresponding images and xml files have the same indices in each list
