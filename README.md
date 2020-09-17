@@ -20,7 +20,7 @@ science program.
 * [Google Open Images Dataset](https://storage.googleapis.com/openimages/web/index.html)
 
 #### File Contents
-* `Object_Detection_Transfer_Learning_with_PyTorch.ipynb` should be used to train the neural network and use it to 
+* `Object_Detection_Transfer_Learning_with_PyTorch.ipynb` should be used to train the neural network and to 
   perform object detection on videos. _It has only been used and tested with Google Colaboratory. It is strongly 
   recommended that you view/run it as a Colab Notebook._ You can do so by clicking the 'Open in Colab' button on 
   [GitHub](https://github.com/stephenjkaplan/snow-grooming-object-detection/blob/master/Object_Detection_Transfer_Learning_with_PyTorch.ipynb).
@@ -39,7 +39,7 @@ science program.
 
 #### Using Object Detection API
 
-TI developed a prototype for an object detection API that can be run on localhost. You must first use the notebook 
+I developed a prototype for an object detection API that can be run on localhost. You must first use the notebook 
 in this repository to train and save a model. No pre-built model is provided. Assuming you have 
 [Flask](https://flask.palletsprojects.com/en/1.1.x/) installed, first run the following command in your terminal:
 
