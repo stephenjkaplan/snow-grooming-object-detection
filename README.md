@@ -1,9 +1,9 @@
 # Snow Grooming Object Detection
 
-Watch me present a high-level overview of this project [here](https://www.youtube.com/watch?v=NhGajxs4t1Q&feature=youtu.be).
+Watch me present an overview of this project [here](https://www.youtube.com/watch?v=NhGajxs4t1Q&feature=youtu.be).
 
 Check out the [blog post](https://stephenjkaplan.github.io/2020/10/06/snow-grooming-object-detection/) for a deeper 
-technical dive into this project.
+technical dive.
 
 #### Description
 
